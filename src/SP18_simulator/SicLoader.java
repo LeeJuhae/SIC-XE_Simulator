@@ -51,7 +51,6 @@ public class SicLoader {
 			int y=0;
 			ArrayList<String> mRecord = new ArrayList<String>(); // Modification Record 문장을 저장하는 list
 			ArrayList<Integer> mCsNum = new ArrayList<Integer>(); // Modification Record 문장이 해당하는 Control Section 번호를 저장하는 list 
-			ArrayList<Integer> memNum = new ArrayList<Integer>(); //Modification Record 처리할때 사용할 메모리번호를 저장하는 list
 			FileReader filereader = new FileReader(objectCode);
 			BufferedReader bufReader = new BufferedReader(filereader); 
 			//pass1 
@@ -67,7 +66,6 @@ public class SicLoader {
 							rMgr.setProgName(line.substring(1, x));
 							rMgr.setStartAddr(Integer.parseInt(line.substring(7,13),16)+csAddr);
 							rMgr.setProgLength(line.substring(13));
-							memNum.add(memoryNum);
 							csNum++; 
 							break;
 						case 'D' :
@@ -77,13 +75,13 @@ public class SicLoader {
 							}
 							break;
 						case 'T' :
+							memoryNum = Integer.parseInt(line.substring(1,7), 16)+rMgr.startAddr.get(rMgr.startAddr.size()-1);
 							for(int i = 0 ; i < line.substring(9).length(); i++){
 								temp = Integer.parseInt(line.substring(9+i,10+i),16);
 								if((i % 2) == 0){
 									rMgr.memory[memoryNum] += (char)(temp<<4);
 								} else if((i % 2) == 1){
 									rMgr.memory[memoryNum] += (char)(temp);
-									//System.out.println(memoryNum + " " +Integer.toHexString((int)rMgr.memory[memoryNum]));
 									memoryNum++;
 								}
 							}
@@ -106,59 +104,45 @@ public class SicLoader {
 				else
 					modiCount = (modiCount+1) / 2;
 				tempChar = new char[modiCount];
+				num = rMgr.startAddr.get(mCsNum.get(i))+Integer.parseInt(mRecord.get(i).substring(1, 7),16);
+				tempChar = rMgr.getMemory(num, modiCount);
+
+				for(int k = 0; k < modiCount ; k++){
+					y += (int)tempChar[k];
+					if(k == (modiCount -1))
+						break;
+					y = y<<8;
+				}
 				for(int j = 0 ; j < rMgr.progName.size() ; j++){
 					if(mRecord.get(i).substring(10).equals(rMgr.progName.get(j))){
-						num = memNum.get(mCsNum.get(i))+Integer.parseInt(mRecord.get(i).substring(1, 7),16);
-						tempChar = rMgr.getMemory(num, modiCount);
-						
-						for(int k = 0; k < modiCount ; k++){
-							
-							y += (int)tempChar[k];
-							if(k == (modiCount -1))
-								break;
-							y = y<<8;
-						}
-						
 						if(mRecord.get(i).charAt(9)=='+'){
 							y+=rMgr.startAddr.get(j);
 						}else if(mRecord.get(i).charAt(9) == '-'){
 							y-=rMgr.startAddr.get(j);
 						}
-						//for(int k = 0 ; k < modiCount)
-						//rMgr.setMemory(num, , modiCount);
-						//System.out.println(y);
-						y = 0;
 						break;
 					}
 				}
 				for(int j = 0 ; j < symTab.symbolList.size() ; j++){
 					if(mRecord.get(i).substring(10).equals(symTab.symbolList.get(j))){
-						num = memNum.get(mCsNum.get(i))+Integer.parseInt(mRecord.get(i).substring(1, 7),16);
-						tempChar = rMgr.getMemory(num, modiCount);
-						for(int k = 0; k < modiCount-1 ; k++){
-							y += (int)tempChar[k];
-							y = y<<8;
-						}
 						if(mRecord.get(i).charAt(9)=='+'){
 							y+=symTab.addressList.get(j);
 						}else if(mRecord.get(i).charAt(9) == '-'){
 							y-=symTab.addressList.get(j);
 						}
-						y = 0;
 						break;
 					}
 				}
+				for(int k = modiCount-1 ; k >=0 ; k--){
+					tempChar[k] = (char) (y & 255);
+					y = y>>8;
+				}
+				rMgr.setMemory(num, tempChar, modiCount);
+				y = 0;
 			}
-//			for(int i = 0 ; i < rMgr.progName.size() ; i++){
-//				
-//				System.out.println(rMgr.progName.get(i));
-//				System.out.println(Integer.toHexString(rMgr.startAddr.get(i)));
-//			}
-//			for(int i = 0 ; i < symTab.symbolList.size(); i++){
-//				System.out.println(symTab.symbolList.get(i));
-//				System.out.println(Integer.toHexString(symTab.addressList.get(i)));
-//			}
-				
+			for(int i = 0 ; i < 4219 ; i++){
+				System.out.println(Integer.toHexString(i)+ " " + Integer.toHexString((int)rMgr.memory[i]));
+			}
 			bufReader.close();
 		}catch(IOException e){
 			System.out.println(e);
