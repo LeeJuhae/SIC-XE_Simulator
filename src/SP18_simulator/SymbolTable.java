@@ -6,11 +6,12 @@ import java.util.ArrayList;
  * section 별로 하나씩 인스턴스를 할당한다.
  */
 public class SymbolTable {
-	ArrayList<String> symbolList;
-	ArrayList<Integer> addressList;
+	ArrayList<String> symbolList; // symbol을 저장하는 list
+	ArrayList<Integer> addressList; // symbol의 주소를 저장하는 list
+	
 	// 기타 literal, external 선언 및 처리방법을 구현한다.
 	public SymbolTable(){
-		symbolList = new ArrayList<String>();
+		symbolList = new ArrayList<String>(); 
 		addressList = new ArrayList<Integer>();
 	}
 	

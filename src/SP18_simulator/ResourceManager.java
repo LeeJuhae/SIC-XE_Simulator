@@ -92,8 +92,11 @@ public class ResourceManager{
 	 * @return 가져오는 데이터
 	 */
 	public char[] getMemory(int location, int num){
-		return null;
-		
+		char[] mem = new char[num];
+		for(int i = 0 ; i < num ; i++){
+			mem[i] = memory[location+i];
+		}
+		return mem;
 	}
 
 	/**
@@ -103,7 +106,8 @@ public class ResourceManager{
 	 * @param num 저장하는 데이터의 개수
 	 */
 	public void setMemory(int locate, char[] data, int num){
-
+		for(int i= 0 ; i < num ; i++)
+		memory[locate+i] = data[i];
 	}
 
 	/**
@@ -145,15 +149,11 @@ public class ResourceManager{
 	
 	public void setProgName(String name){
 		progName.add(name);
-	
 	}
 	public void setProgLength(String length){
 		progLength.add(length);
-	
 	}
 	public void setStartAddr(int address){
 		startAddr.add(address);
-	
 	}
-	
 }

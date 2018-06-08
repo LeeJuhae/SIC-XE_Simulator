@@ -39,29 +39,31 @@ public class SicLoader {
 	 */
 	public void load(File objectCode){
 		try{
-			String line;
-			int memoryNum=0;
-			int csAddr = 0;
-			int temp;
-			int csNum = -1;
-			int x=1;
-			int num;
-			ArrayList<String> mRecord = new ArrayList<String>();
-			ArrayList<Integer> mCsNum = new ArrayList<Integer>();
+			String line; 
+			int memoryNum=0; // Resource Manager의 memory번지수
+			int csAddr = 0; // Control Section 의 시작주소를 저장하는 변수
+			int temp; // Text Record 처리할 때 사용하는 임시 저장 변수
+			int csNum = -1; //Control Section 번호 
+			int x=1; // Header Record에서 program Name을 파싱할때 사용하는 변수
+			int num; // Modification에서 수정하고자 하는 메모리의 번지수를 저장하는 변수
+			int modiCount = 0;
+			char[] tempChar;
+			int y=0;
+			ArrayList<String> mRecord = new ArrayList<String>(); // Modification Record 문장을 저장하는 list
+			ArrayList<Integer> mCsNum = new ArrayList<Integer>(); // Modification Record 문장이 해당하는 Control Section 번호를 저장하는 list 
 			ArrayList<Integer> memNum = new ArrayList<Integer>(); //Modification Record 처리할때 사용할 메모리번호를 저장하는 list
 			FileReader filereader = new FileReader(objectCode);
 			BufferedReader bufReader = new BufferedReader(filereader); 
+			//pass1 
 			while((line = bufReader.readLine())!= null){
 				if(line.length() != 0){
 					switch(line.charAt(0)){
 						case 'H' : 
 							for( ; x <7 ; x++){
 								if(line.charAt(x) == ' '){
-									//x++;
 									break;
 								}
 							}
-								
 							rMgr.setProgName(line.substring(1, x));
 							rMgr.setStartAddr(Integer.parseInt(line.substring(7,13),16)+csAddr);
 							rMgr.setProgLength(line.substring(13));
@@ -81,7 +83,7 @@ public class SicLoader {
 									rMgr.memory[memoryNum] += (char)(temp<<4);
 								} else if((i % 2) == 1){
 									rMgr.memory[memoryNum] += (char)(temp);
-									System.out.println(memoryNum + " " +Integer.toHexString((int)rMgr.memory[memoryNum]));
+									//System.out.println(memoryNum + " " +Integer.toHexString((int)rMgr.memory[memoryNum]));
 									memoryNum++;
 								}
 							}
@@ -96,24 +98,54 @@ public class SicLoader {
 					}
 				}
 			}
+			//pass2 : Modification Record 처리
 			for(int i = 0 ; i < mRecord.size() ; i++){
+				modiCount = Integer.parseInt(mRecord.get(i).substring(7,9),16);
+				if(modiCount %2 == 0)
+					modiCount/=2;
+				else
+					modiCount = (modiCount+1) / 2;
+				tempChar = new char[modiCount];
 				for(int j = 0 ; j < rMgr.progName.size() ; j++){
 					if(mRecord.get(i).substring(10).equals(rMgr.progName.get(j))){
 						num = memNum.get(mCsNum.get(i))+Integer.parseInt(mRecord.get(i).substring(1, 7),16);
-						//System.out.println(num);
-						if(mRecord.get(i).charAt(9)=='+'){
+						tempChar = rMgr.getMemory(num, modiCount);
 						
-						}else if(mRecord.get(i).charAt(9) == '-'){
+						for(int k = 0; k < modiCount ; k++){
 							
+							y += (int)tempChar[k];
+							if(k == (modiCount -1))
+								break;
+							y = y<<8;
 						}
-						//rMgr.memory[memNum.get(mCsNum.get(i))+Integer.parseInt(mRecord.get(i).substring(1, 7),16)] = 0;
+						
+						if(mRecord.get(i).charAt(9)=='+'){
+							y+=rMgr.startAddr.get(j);
+						}else if(mRecord.get(i).charAt(9) == '-'){
+							y-=rMgr.startAddr.get(j);
+						}
+						//for(int k = 0 ; k < modiCount)
+						//rMgr.setMemory(num, , modiCount);
+						//System.out.println(y);
+						y = 0;
 						break;
 					}
 				}
 				for(int j = 0 ; j < symTab.symbolList.size() ; j++){
 					if(mRecord.get(i).substring(10).equals(symTab.symbolList.get(j))){
 						num = memNum.get(mCsNum.get(i))+Integer.parseInt(mRecord.get(i).substring(1, 7),16);
-						System.out.println(num);
+						tempChar = rMgr.getMemory(num, modiCount);
+						for(int k = 0; k < modiCount-1 ; k++){
+							y += (int)tempChar[k];
+							y = y<<8;
+						}
+						if(mRecord.get(i).charAt(9)=='+'){
+							y+=symTab.addressList.get(j);
+						}else if(mRecord.get(i).charAt(9) == '-'){
+							y-=symTab.addressList.get(j);
+						}
+						y = 0;
+						break;
 					}
 				}
 			}
@@ -126,7 +158,7 @@ public class SicLoader {
 //				System.out.println(symTab.symbolList.get(i));
 //				System.out.println(Integer.toHexString(symTab.addressList.get(i)));
 //			}
-//				
+				
 			bufReader.close();
 		}catch(IOException e){
 			System.out.println(e);
