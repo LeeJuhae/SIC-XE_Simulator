@@ -140,9 +140,9 @@ public class SicLoader {
 				rMgr.setMemory(num, tempChar, modiCount);
 				y = 0;
 			}
-			for(int i = 0 ; i < 4219 ; i++){
-				System.out.println(Integer.toHexString(i)+ " " + Integer.toHexString((int)rMgr.memory[i]));
-			}
+//			for(int i = 0 ; i < 4219 ; i++){
+//				System.out.println(Integer.toHexString(i)+ " " + Integer.toHexString((int)rMgr.memory[i]));
+//			}
 			bufReader.close();
 		}catch(IOException e){
 			System.out.println(e);

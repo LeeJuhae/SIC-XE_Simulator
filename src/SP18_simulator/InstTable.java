@@ -37,7 +37,7 @@ public class InstTable {
 			while ((line = bufReader.readLine()) != null) {
 				Instruction inst = new Instruction(line);
 				/*instMap에 명령어, 명령어의 정보를 각각 키(key)와 value(값)으로 넣어준다.*/ 
-				instMap.put(inst.instruction, inst);
+				instMap.put(inst.opcode, inst);
 			}
 			bufReader.close();
 		} catch (IOException e) {

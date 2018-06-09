@@ -31,7 +31,6 @@ public class ResourceManager{
 	 */
 	HashMap<String,Object> deviceManager = new HashMap<String,Object>();
 	char[] memory = new char[65536]; // String으로 수정해서 사용하여도 무방함.
-	//String memory;
 	int[] register = new int[10];
 	double register_F;
 	
@@ -44,7 +43,7 @@ public class ResourceManager{
 	 * 메모리, 레지스터등 가상 리소스들을 초기화한다.
 	 */
 	public void initializeResource(){
-		//memory ="";
+		register[9] = -1;//regSW = -1로 초기화
 	}
 	
 	/**
@@ -116,8 +115,10 @@ public class ResourceManager{
 	 * @return 레지스터가 소지한 값
 	 */
 	public int getRegister(int regNum){
-		return 0;
-		
+		if(regNum == 6)
+			return (int)register_F;
+		else
+			return register[regNum];
 	}
 
 	/**
@@ -126,7 +127,10 @@ public class ResourceManager{
 	 * @param value 레지스터에 집어넣는 값
 	 */
 	public void setRegister(int regNum, int value){
-	
+		if(regNum == 6)
+			register_F = value;
+		else
+			register[regNum] = value;
 	}
 
 	/**
@@ -135,7 +139,12 @@ public class ResourceManager{
 	 * @return
 	 */
 	public char[] intToChar(int data){
-		return null;
+		char[] tempChar = new char[3];
+		for(int k = 1 ; k >=0 ; k--){
+			tempChar[k] = (char) (data & 255);
+			data = data>>8;
+		}
+		return tempChar;
 	}
 
 	/**
@@ -143,8 +152,18 @@ public class ResourceManager{
 	 * @param data
 	 * @return
 	 */
-	public int byteToInt(byte[] data){
-		return 0;
+	public int charToInt(char[] data){
+		int num=0;
+		for(int i = 0 ; i < data.length ; i++){
+			if(i == 0)
+				num+= data[i]&15;
+			else
+				num+=(int)data[i];
+			if(i == data.length-1)
+				break;
+			num = num<<8;
+		}
+		return num;
 	}
 	
 	public void setProgName(String name){
