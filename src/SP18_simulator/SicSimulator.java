@@ -56,32 +56,36 @@ public class SicSimulator {
 	public void oneStep() {
 		int ta=0;
 		int disp = 0;
+		char[] tempChar =new char[1];
 		char[] tempChar3 = new char[2];
 		char[] tempChar4 = new char[3];
 		if(instTable.instMap.containsKey(String.format("%02X",rMgr.memory[rMgr.register[regPC]]&252))){
-			System.out.println(rMgr.register[regPC]+" "+instTable.instMap.get(String.format("%02X",rMgr.memory[rMgr.register[regPC]]&252)).instruction);
+			System.out.println(Integer.toHexString(rMgr.register[regPC])+" "+instTable.instMap.get(String.format("%02X",rMgr.memory[rMgr.register[regPC]]&252)).instruction);
 			
 			//Target Address 구하기
 			switch(rMgr.memory[rMgr.register[regPC]+1] & (bFlag |pFlag)){
-				case bFlag :
+				case bFlag : // Base
 					;
 					break;
-					///////////여기예용!
-				case pFlag :
-					//disp = (rMgr.memory[rMgr.register[regPC] + 1] & 15) + (int)rMgr.memory[rMgr.register[regPC]+2];//charToInt
+				case pFlag ://3형식만 해당됨
 					for(int i = 0 ; i <2 ; i++){
 						tempChar3[i] = rMgr.memory[rMgr.register[regPC]+1+i];
 					}
 					disp = rMgr.charToInt(tempChar3);
-					if(disp >2048)
-						ta = (rMgr.register[regPC] + 3) - disp;
-					else
+					//System.out.println(disp);
+					if(disp >2048){
+						ta = (rMgr.register[regPC] + 3) +(disp-4096);
+					}
+					else{
 						ta = (rMgr.register[regPC] + 3) + disp;
-					System.out.println(ta);
+					}
 					break;
 				case 0 :
 					if((rMgr.memory[rMgr.register[regPC]+1] & eFlag )== 0){// 3형식 일때
-						ta = (rMgr.memory[rMgr.register[regPC] + 1] & 15) + (int)rMgr.memory[rMgr.register[regPC]+2];
+						for(int i = 0 ; i <2 ; i++){
+							tempChar3[i] = rMgr.memory[rMgr.register[regPC]+1+i];
+						}
+						ta = rMgr.charToInt(tempChar3);
 					} else if((rMgr.memory[rMgr.register[regPC]+1] & eFlag )== 16){ // 4형식 일때
 						for(int i = 0 ; i <3 ; i++){
 							tempChar4[i] = rMgr.memory[rMgr.register[regPC]+1+i];
@@ -89,7 +93,6 @@ public class SicSimulator {
 						ta = rMgr.charToInt(tempChar4);
 					}
 					break;
-				
 			}
 			//STL
 			if(Integer.toHexString((int)(rMgr.memory[rMgr.register[regPC]]&252)).equals("14")){
@@ -136,9 +139,8 @@ public class SicSimulator {
 			}
 			//JEQ
 			else if(Integer.toHexString((int)(rMgr.memory[rMgr.register[regPC]]&252)).equals("30")){
-				if(rMgr.register[regSW] == 0){
+				if(rMgr.register[regSW] == -1){
 					rMgr.setRegister(regPC,ta);
-					System.out.println("ta " +Integer.toHexString(ta));
 				}
 				else{
 					if((rMgr.memory[rMgr.register[regPC]+1] & eFlag) == 0){
@@ -148,8 +150,6 @@ public class SicSimulator {
 						rMgr.register[regPC] +=4;
 					}
 				}
-					
-					
 			}
 			//J
 			else if(Integer.toHexString((int)(rMgr.memory[rMgr.register[regPC]]&252)).equals("3c")){
@@ -175,6 +175,7 @@ public class SicSimulator {
 			}
 			//CLEAR
 			else if(Integer.toHexString((int)(rMgr.memory[rMgr.register[regPC]]&252)).equals("b4")){
+				tempChar[0] = rMgr.memory[regPC+1];
 				
 				rMgr.register[regPC] +=2;
 			}
@@ -189,7 +190,9 @@ public class SicSimulator {
 			}
 			//TD
 			else if(Integer.toHexString((int)(rMgr.memory[rMgr.register[regPC]]&252)).equals("e0")){
+				tempChar[0] = rMgr.memory[ta];
 				rMgr.register[regSW] = 0;
+				rMgr.testDevice(Integer.toHexString(rMgr.charToInt(tempChar)));
 				if((rMgr.memory[rMgr.register[regPC]+1] & eFlag) == 0){
 					rMgr.register[regPC] +=3;
 				}

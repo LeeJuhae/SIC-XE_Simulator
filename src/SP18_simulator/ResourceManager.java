@@ -1,9 +1,14 @@
 package SP18_simulator;
 
-import java.awt.List;
-import java.io.File;
+//import java.awt.List;
+//import java.io.File;
+import java.io.IOException;
+import java.nio.channels.FileChannel;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.nio.file.StandardOpenOption;
+
 
 
 /**
@@ -39,6 +44,7 @@ public class ResourceManager{
 	ArrayList<String> progName = new ArrayList<String>();
 	ArrayList<String> progLength = new ArrayList<String>();
 	ArrayList<Integer> startAddr = new ArrayList<Integer>();
+	FileChannel fileChannel;
 	/**
 	 * 메모리, 레지스터등 가상 리소스들을 초기화한다.
 	 */
@@ -58,9 +64,21 @@ public class ResourceManager{
 	 * 디바이스를 사용할 수 있는 상황인지 체크. TD명령어를 사용했을 때 호출되는 함수.
 	 * 입출력 stream을 열고 deviceManager를 통해 관리시킨다.
 	 * @param devName 확인하고자 하는 디바이스의 번호,또는 이름
+	 * @throws IOException 
 	 */
-	public void testDevice(String devName) {
-		
+	public void testDevice(String devName){
+		try {
+			fileChannel = FileChannel.open(
+				    Paths.get("C:\\Users\\samsung\\Desktop\\a.txt"), 
+				    StandardOpenOption.READ, 
+				    StandardOpenOption.WRITE
+				);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			register[9] = -1; // 오류나면 regSW값을 -1로 설정
+			
+			e.printStackTrace();
+		}
 	}
 
 	/**

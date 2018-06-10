@@ -64,7 +64,16 @@ public class VisualSimulator {
 	 * 화면을 최신값으로 갱신하는 역할을 수행한다.
 	 */
 	public void update(){
-		//frame.progNameText.setText(resourceManager.progName);
+		frame.regA_dec.setText(Integer.toString(resourceManager.register[0]));
+		frame.regX_dec.setText(Integer.toString(resourceManager.register[1]));
+		frame.regL_dec.setText(Integer.toString(resourceManager.register[2]));
+		frame.regPC_dec.setText(Integer.toString(resourceManager.register[8]));
+		frame.regSW.setText(Integer.toString(resourceManager.register[9]));
+		frame.regB_dec.setText(Integer.toString(resourceManager.register[3]));
+		frame.regS_dec.setText(Integer.toString(resourceManager.register[4]));
+		frame.regT_dec.setText(Integer.toString(resourceManager.register[5]));
+		frame.regF.setText(Double.toString(resourceManager.register_F));
+		
 	};
 	
 	
