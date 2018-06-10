@@ -74,6 +74,15 @@ public class VisualSimulator {
 		frame.regT_dec.setText(Integer.toString(resourceManager.register[5]));
 		frame.regF.setText(Double.toString(resourceManager.register_F));
 		
+		frame.regA_hex.setText(Integer.toHexString(resourceManager.register[0]));
+		frame.regX_hex.setText(Integer.toHexString(resourceManager.register[1]));
+		frame.regL_hex.setText(Integer.toHexString(resourceManager.register[2]));
+		frame.regPC_hex.setText(Integer.toHexString(resourceManager.register[8]));
+		//frame.regSW.setText(Integer.toHexString(resourceManager.register[0]));
+		frame.regB_hex.setText(Integer.toHexString(resourceManager.register[3]));
+		frame.regS_hex.setText(Integer.toHexString(resourceManager.register[4]));
+		frame.regT_hex.setText(Integer.toHexString(resourceManager.register[5]));
+		//frame.regF.setText(Integer.toHexString(resourceManager.register[0]));
 	};
 	
 	

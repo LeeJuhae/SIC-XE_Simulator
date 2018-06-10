@@ -53,6 +53,7 @@ public class SicLoader {
 			ArrayList<Integer> mCsNum = new ArrayList<Integer>(); // Modification Record 문장이 해당하는 Control Section 번호를 저장하는 list 
 			FileReader filereader = new FileReader(objectCode);
 			BufferedReader bufReader = new BufferedReader(filereader); 
+			rMgr.initializeResource();
 			//pass1 
 			while((line = bufReader.readLine())!= null){
 				if(line.length() != 0){

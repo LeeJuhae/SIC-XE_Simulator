@@ -3,7 +3,9 @@ package SP18_simulator;
 //import java.awt.List;
 //import java.io.File;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
+import java.nio.charset.Charset;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -38,7 +40,7 @@ public class ResourceManager{
 	char[] memory = new char[65536]; // String으로 수정해서 사용하여도 무방함.
 	int[] register = new int[10];
 	double register_F;
-	
+	int noOfBytesRead =0;
 	SymbolTable symtabList;
 	// 이외에도 필요한 변수 선언해서 사용할 것.
 	ArrayList<String> progName = new ArrayList<String>();
@@ -50,6 +52,7 @@ public class ResourceManager{
 	 */
 	public void initializeResource(){
 		register[9] = -1;//regSW = -1로 초기화
+		//register[2] = 3;
 	}
 	
 	/**
@@ -67,17 +70,21 @@ public class ResourceManager{
 	 * @throws IOException 
 	 */
 	public void testDevice(String devName){
-		try {
-			fileChannel = FileChannel.open(
-				    Paths.get("C:\\Users\\samsung\\Desktop\\a.txt"), 
-				    StandardOpenOption.READ, 
-				    StandardOpenOption.WRITE
-				);
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			register[9] = -1; // 오류나면 regSW값을 -1로 설정
-			
-			e.printStackTrace();
+		if(!deviceManager.containsKey(devName)){
+			try {
+				fileChannel = FileChannel.open(
+					    Paths.get("C:\\Users\\samsung\\Desktop\\"+devName+".txt"),
+					    StandardOpenOption.CREATE,
+					    StandardOpenOption.READ, 
+					    StandardOpenOption.WRITE
+					);
+				deviceManager.put(devName, fileChannel);
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				register[9] = -1; // 오류나면 regSW값을 -1로 설정
+				
+				e.printStackTrace();
+			}
 		}
 	}
 
@@ -87,9 +94,22 @@ public class ResourceManager{
 	 * @param num 가져오는 글자의 개수
 	 * @return 가져온 데이터
 	 */
-	public char[] readDevice(String devName, int num){
-		return null;
+	public char readDevice(String devName){
+		//System.out.println(noOfBytesRead);
+		FileChannel fc = (FileChannel)deviceManager.get(devName);
+		ByteBuffer buffer = ByteBuffer.allocate(1);
 		
+		try {
+			noOfBytesRead  = fc.read(buffer);
+			//System.out.println(buffer);
+			buffer.flip();
+			if(noOfBytesRead == -1)
+				return 0;
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return (char)buffer.get();
 	}
 
 	/**
@@ -156,9 +176,17 @@ public class ResourceManager{
 	 * @param data
 	 * @return
 	 */
+//	public char[] intToChar(int data){
+//		char[] tempChar = new char[3];
+//		for(int k = 1 ; k >=0 ; k--){
+//			tempChar[k] = (char) (data & 255);
+//			data = data>>8;
+//		}
+//		return tempChar;
+//	}
 	public char[] intToChar(int data){
 		char[] tempChar = new char[3];
-		for(int k = 1 ; k >=0 ; k--){
+		for(int k = 2 ; k >=0 ; k--){
 			tempChar[k] = (char) (data & 255);
 			data = data>>8;
 		}
@@ -170,13 +198,23 @@ public class ResourceManager{
 	 * @param data
 	 * @return
 	 */
+//	public int charToInt(char[] data){
+//		int num=0;
+//		for(int i = 0 ; i < data.length ; i++){
+//			if(i == 0)
+//				num+= data[i]&15;
+//			else
+//				num+=(int)data[i];
+//			if(i == data.length-1)
+//				break;
+//			num = num<<8;
+//		}
+//		return num;
+//	}
 	public int charToInt(char[] data){
 		int num=0;
 		for(int i = 0 ; i < data.length ; i++){
-			if(i == 0)
-				num+= data[i]&15;
-			else
-				num+=(int)data[i];
+			num+=(int)data[i];
 			if(i == data.length-1)
 				break;
 			num = num<<8;

@@ -56,41 +56,53 @@ public class SicSimulator {
 	public void oneStep() {
 		int ta=0;
 		int disp = 0;
-		char[] tempChar =new char[1];
-		char[] tempChar3 = new char[2];
-		char[] tempChar4 = new char[3];
-		if(instTable.instMap.containsKey(String.format("%02X",rMgr.memory[rMgr.register[regPC]]&252))){
+		char[] tempChar1 =new char[1];
+		char[] tempChar2 = new char[2];
+		//char[] tempChar3 = new char[3];
+		 if(instTable.instMap.containsKey(String.format("%02X",rMgr.memory[rMgr.register[regPC]]&252))){
 			System.out.println(Integer.toHexString(rMgr.register[regPC])+" "+instTable.instMap.get(String.format("%02X",rMgr.memory[rMgr.register[regPC]]&252)).instruction);
-			
+			//System.out.println(Integer.toHexString((int)(rMgr.memory[rMgr.register[regPC]]&252)));
 			//Target Address 구하기
 			switch(rMgr.memory[rMgr.register[regPC]+1] & (bFlag |pFlag)){
 				case bFlag : // Base
 					;
 					break;
 				case pFlag ://3형식만 해당됨
-					for(int i = 0 ; i <2 ; i++){
-						tempChar3[i] = rMgr.memory[rMgr.register[regPC]+1+i];
-					}
-					disp = rMgr.charToInt(tempChar3);
-					//System.out.println(disp);
+//					for(int i = 0 ; i <2 ; i++){
+//						tempChar3[i] = rMgr.memory[rMgr.register[regPC]+1+i];
+//					}
+//					disp = rMgr.charToInt(tempChar3);
+					disp += (((int)rMgr.memory[rMgr.register[regPC]+1]) & 15)<<8;
+					tempChar1[0] = rMgr.memory[rMgr.register[regPC]+2];
+					disp += rMgr.charToInt(tempChar1);
+					
 					if(disp >2048){
 						ta = (rMgr.register[regPC] + 3) +(disp-4096);
 					}
 					else{
 						ta = (rMgr.register[regPC] + 3) + disp;
 					}
+					//System.out.println(disp);
 					break;
 				case 0 :
 					if((rMgr.memory[rMgr.register[regPC]+1] & eFlag )== 0){// 3형식 일때
-						for(int i = 0 ; i <2 ; i++){
-							tempChar3[i] = rMgr.memory[rMgr.register[regPC]+1+i];
-						}
-						ta = rMgr.charToInt(tempChar3);
+//						for(int i = 0 ; i <2 ; i++){
+//							tempChar3[i] = rMgr.memory[rMgr.register[regPC]+1+i];
+//						}
+//						ta = rMgr.charToInt(tempChar3);
+						ta+=(((int)rMgr.memory[rMgr.register[regPC]+1]) & 15)<<8;
+						tempChar1[0] = rMgr.memory[rMgr.register[regPC]+2];
+						ta+=rMgr.charToInt(tempChar1);
 					} else if((rMgr.memory[rMgr.register[regPC]+1] & eFlag )== 16){ // 4형식 일때
-						for(int i = 0 ; i <3 ; i++){
-							tempChar4[i] = rMgr.memory[rMgr.register[regPC]+1+i];
+//						for(int i = 0 ; i <3 ; i++){
+//							tempChar4[i] = rMgr.memory[rMgr.register[regPC]+1+i];
+//						}
+//						ta = rMgr.charToInt(tempChar4);
+						ta+=(((int)rMgr.memory[rMgr.register[regPC]+1]) & 15)<<16;
+						for(int i = 0 ; i < 2 ; i++){
+							tempChar2[i] = rMgr.memory[rMgr.register[regPC]+2+i];
 						}
-						ta = rMgr.charToInt(tempChar4);
+						ta+=rMgr.charToInt(tempChar2);
 					}
 					break;
 			}
@@ -106,7 +118,7 @@ public class SicSimulator {
 						if((rMgr.memory[rMgr.register[regPC]+1] & eFlag) == 0){
 							rMgr.register[regPC] +=3;
 						}
-						else if((rMgr.memory[rMgr.register[regPC]+1] & eFlag) == 1){
+						else if((rMgr.memory[rMgr.register[regPC]+1] & eFlag) == 16){
 							rMgr.register[regPC] +=4;
 						}
 						break;
@@ -114,26 +126,52 @@ public class SicSimulator {
 			}
 			//JSUB
 			else if(Integer.toHexString((int)(rMgr.memory[rMgr.register[regPC]]&252)).equals("48")){
-				rMgr.setRegister(regL, rMgr.register[regPC]);
+				//System.out.println(nFlag|iFlag);
+				switch(rMgr.memory[rMgr.register[regPC]] & (nFlag |iFlag)){
+				case nFlag ://indirect addressing
+					break;
+				case iFlag ://immediate addressing
+					break;
+				case nFlag|iFlag : // simple addressing
+					//System.out.println(rMgr.memory[rMgr.register[regPC]+1] & eFlag);
+					//rMgr.setMemory(ta, rMgr.intToChar(rMgr.register[regL]),3);
+					if((rMgr.memory[rMgr.register[regPC]+1] & eFlag) == 0){
+						rMgr.setRegister(regL, rMgr.register[regPC]+3);
+						//System.out.println(rMgr.register[regL]);
+					}
+					else if((rMgr.memory[rMgr.register[regPC]+1] & eFlag) == 16){
+						rMgr.setRegister(regL, rMgr.register[regPC]+4);
+						//System.out.println(rMgr.register[regL]);
+					}
+					break;
+				}
 				rMgr.setRegister(regPC,ta);
 			}
 			//LDA
-			else if(Integer.toHexString((int)(rMgr.memory[rMgr.register[regPC]]&252)).equals("00")){
+			else if(String.format("%02X",rMgr.memory[rMgr.register[regPC]]&252).equals("00")){
+				rMgr.setRegister(regA, rMgr.charToInt(rMgr.getMemory(ta, 3)));
 				if((rMgr.memory[rMgr.register[regPC]+1] & eFlag) == 0){
 					rMgr.register[regPC] +=3;
 				}
-				else if((rMgr.memory[rMgr.register[regPC]+1] & eFlag) == 1){
+				else if((rMgr.memory[rMgr.register[regPC]+1] & eFlag) == 16){
 					rMgr.register[regPC] +=4;
 				}
 			}
 			//COMP
 			else if(Integer.toHexString((int)(rMgr.memory[rMgr.register[regPC]]&252)).equals("28")){
-				if(rMgr.register[regA] == rMgr.charToInt(rMgr.getMemory(rMgr.register[regPC], 3)))
-					rMgr.register[regSW] = 0;
+			//System.out.println(ta);
+				if((rMgr.memory[rMgr.register[regPC]+1] & iFlag) == 1){
+					if(rMgr.register[regA] == ta)
+						rMgr.register[regSW] = 0;
+				}
+				else{
+					if(rMgr.register[regA] == rMgr.charToInt(rMgr.getMemory(rMgr.register[regPC], 3)))
+						rMgr.register[regSW] = 0;
+				}
 				if((rMgr.memory[rMgr.register[regPC]+1] & eFlag) == 0){
 					rMgr.register[regPC] +=3;
 				}
-				else if((rMgr.memory[rMgr.register[regPC]+1] & eFlag) == 1){
+				else if((rMgr.memory[rMgr.register[regPC]+1] & eFlag) == 16){
 					rMgr.register[regPC] +=4;
 				}
 			}
@@ -146,7 +184,7 @@ public class SicSimulator {
 					if((rMgr.memory[rMgr.register[regPC]+1] & eFlag) == 0){
 						rMgr.register[regPC] +=3;
 					}
-					else if((rMgr.memory[rMgr.register[regPC]+1] & eFlag) == 1){
+					else if((rMgr.memory[rMgr.register[regPC]+1] & eFlag) == 16){
 						rMgr.register[regPC] +=4;
 					}
 				}
@@ -167,7 +205,7 @@ public class SicSimulator {
 					if((rMgr.memory[rMgr.register[regPC]+1] & eFlag) == 0){
 						rMgr.register[regPC] +=3;
 					}
-					else if((rMgr.memory[rMgr.register[regPC]+1] & eFlag) == 1){
+					else if((rMgr.memory[rMgr.register[regPC]+1] & eFlag) == 16){
 						rMgr.register[regPC] +=4;
 					}
 					break;
@@ -175,63 +213,85 @@ public class SicSimulator {
 			}
 			//CLEAR
 			else if(Integer.toHexString((int)(rMgr.memory[rMgr.register[regPC]]&252)).equals("b4")){
-				tempChar[0] = rMgr.memory[regPC+1];
-				
+				tempChar1[0] = rMgr.memory[rMgr.register[regPC]+1];
+				tempChar1[0] = (char)(tempChar1[0]>>>4);
+				rMgr.setRegister(rMgr.charToInt(tempChar1), 0);
 				rMgr.register[regPC] +=2;
 			}
 			//LDT
 			else if(Integer.toHexString((int)(rMgr.memory[rMgr.register[regPC]]&252)).equals("74")){
+				rMgr.setRegister(regT, rMgr.charToInt(rMgr.getMemory(ta, 3)));
 				if((rMgr.memory[rMgr.register[regPC]+1] & eFlag) == 0){
 					rMgr.register[regPC] +=3;
 				}
-				else if((rMgr.memory[rMgr.register[regPC]+1] & eFlag) == 1){
+				else if((rMgr.memory[rMgr.register[regPC]+1] & eFlag) == 16){
 					rMgr.register[regPC] +=4;
 				}
 			}
 			//TD
 			else if(Integer.toHexString((int)(rMgr.memory[rMgr.register[regPC]]&252)).equals("e0")){
-				tempChar[0] = rMgr.memory[ta];
+				tempChar1[0] = rMgr.memory[ta];
 				rMgr.register[regSW] = 0;
-				rMgr.testDevice(Integer.toHexString(rMgr.charToInt(tempChar)));
+				rMgr.testDevice(Integer.toHexString(rMgr.charToInt(tempChar1)));
 				if((rMgr.memory[rMgr.register[regPC]+1] & eFlag) == 0){
 					rMgr.register[regPC] +=3;
 				}
-				else if((rMgr.memory[rMgr.register[regPC]+1] & eFlag) == 1){
+				else if((rMgr.memory[rMgr.register[regPC]+1] & eFlag) == 16){
 					rMgr.register[regPC] +=4;
 				}
 			}
 			//RD
 			else if(Integer.toHexString((int)(rMgr.memory[rMgr.register[regPC]]&252)).equals("d8")){
+				
+				tempChar1[0]= rMgr.readDevice(Integer.toHexString(rMgr.charToInt(rMgr.getMemory(ta, 1))));
+				rMgr.setRegister(regA, rMgr.charToInt(tempChar1));
+				//System.out.println(tempChar1[0]);
 				if((rMgr.memory[rMgr.register[regPC]+1] & eFlag) == 0){
 					rMgr.register[regPC] +=3;
 				}
-				else if((rMgr.memory[rMgr.register[regPC]+1] & eFlag) == 1){
+				else if((rMgr.memory[rMgr.register[regPC]+1] & eFlag) == 16){
 					rMgr.register[regPC] +=4;
 				}
 			}
 			//COMPR
 			else if(Integer.toHexString((int)(rMgr.memory[rMgr.register[regPC]]&252)).equals("a0")){
+				
+				if(rMgr.register[regA] == rMgr.register[regS]){
+					rMgr.register[regSW]= -1;
+					//System.out.println("stop");
+				}
+				else
+					rMgr.register[regSW] = 0;
 				rMgr.register[regPC] +=2;
 			}
 			//STCH
 			else if(Integer.toHexString((int)(rMgr.memory[rMgr.register[regPC]]&252)).equals("54")){
+				tempChar1[0] = (char)(rMgr.getRegister(regA) & 0xff);
+				if((rMgr.memory[rMgr.register[regPC]+1] & xFlag) == 0){
+					rMgr.setMemory(ta, tempChar1, 1);
+				}
+				else if((rMgr.memory[rMgr.register[regPC]+1] & xFlag) == 128){
+					rMgr.setMemory(ta+rMgr.register[regX], tempChar1, 1);
+				}
 				if((rMgr.memory[rMgr.register[regPC]+1] & eFlag) == 0){
 					rMgr.register[regPC] +=3;
 				}
-				else if((rMgr.memory[rMgr.register[regPC]+1] & eFlag) == 1){
+				else if((rMgr.memory[rMgr.register[regPC]+1] & eFlag) == 16){
 					rMgr.register[regPC] +=4;
 				}
 			}
 			//TIXR
 			else if(Integer.toHexString((int)(rMgr.memory[rMgr.register[regPC]]&252)).equals("b8")){
 				rMgr.register[regX]+=1;
-//				if(rMgr.register[regX] == )
-//					rMgr.register[regSW] = 0;
-//				else if(rMgr.register[regX] < rMgr.charToInt(rMgr.getMemory(rMgr.register[regPC], 3)))
-//					rMgr.register[regSW] = 1;
-//				else if(rMgr.register[regX] > rMgr.charToInt(rMgr.getMemory(rMgr.register[regPC], 3)))
-//					rMgr.register[regSW] = 2;
-				System.out.println("           "+rMgr.memory[rMgr.register[regPC]+1]);
+				tempChar1[0] = rMgr.memory[rMgr.register[regPC]+1];
+				tempChar1[0] = (char)(tempChar1[0]>>>4);
+				//System.out.println(rMgr.charToInt(tempChar1));
+				if(rMgr.register[regX] < rMgr.register[rMgr.charToInt(tempChar1)])
+					rMgr.register[regSW] = 1;
+				else if(rMgr.register[regX] == rMgr.register[rMgr.charToInt(tempChar1)])
+					rMgr.register[regSW] = 0;
+				else if(rMgr.register[regX] > rMgr.register[rMgr.charToInt(tempChar1)])
+					rMgr.register[regSW] = 2;
 				rMgr.register[regPC] +=2;
 			}
 			//JLT
@@ -242,7 +302,7 @@ public class SicSimulator {
 					if((rMgr.memory[rMgr.register[regPC]+1] & eFlag) == 0){
 						rMgr.register[regPC] +=3;
 					}
-					else if((rMgr.memory[rMgr.register[regPC]+1] & eFlag) == 1){
+					else if((rMgr.memory[rMgr.register[regPC]+1] & eFlag) == 16){
 						rMgr.register[regPC] +=4;
 					}
 				}
@@ -259,7 +319,7 @@ public class SicSimulator {
 					if((rMgr.memory[rMgr.register[regPC]+1] & eFlag) == 0){
 						rMgr.register[regPC] +=3;
 					}
-					else if((rMgr.memory[rMgr.register[regPC]+1] & eFlag) == 1){
+					else if((rMgr.memory[rMgr.register[regPC]+1] & eFlag) == 16){
 						rMgr.register[regPC] +=4;
 					}
 					break;
@@ -274,7 +334,7 @@ public class SicSimulator {
 				if((rMgr.memory[rMgr.register[regPC]+1] & eFlag) == 0){
 					rMgr.register[regPC] +=3;
 				}
-				else if((rMgr.memory[rMgr.register[regPC]+1] & eFlag) == 1){
+				else if((rMgr.memory[rMgr.register[regPC]+1] & eFlag) == 16){
 					rMgr.register[regPC] +=4;
 				}
 			}
@@ -283,7 +343,7 @@ public class SicSimulator {
 				if((rMgr.memory[rMgr.register[regPC]+1] & eFlag) == 0){
 					rMgr.register[regPC] +=3;
 				}
-				else if((rMgr.memory[rMgr.register[regPC]+1] & eFlag) == 1){
+				else if((rMgr.memory[rMgr.register[regPC]+1] & eFlag) == 16){
 					rMgr.register[regPC] +=4;
 				}
 			}
