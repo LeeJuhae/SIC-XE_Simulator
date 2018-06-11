@@ -2,6 +2,8 @@ package SP18_simulator;
 
 import java.io.File;
 
+import javax.swing.DefaultListModel;
+
 /**
  * 시뮬레이터로서의 작업을 담당한다. VisualSimulator에서 사용자의 요청을 받으면 이에 따라
  * ResourceManager에 접근하여 작업을 수행한다.  
@@ -18,14 +20,15 @@ import java.io.File;
 public class SicSimulator {
 	ResourceManager rMgr;
 	InstTable instTable;
-	
+	int ta;
+	//n,i,x,b,p,e 처리 플래그
 	public static final int nFlag = 2;
 	public static final int iFlag = 1;
 	public static final int xFlag = 128;
 	public static final int bFlag = 64;
 	public static final int pFlag = 32;
 	public static final int eFlag = 16;
-	
+	//레지스터 번호 
 	public static final int regA = 0;
 	public static final int regX = 1;
 	public static final int regL = 2;
@@ -37,7 +40,6 @@ public class SicSimulator {
 	public static final int regSW = 9;
 	
 	public SicSimulator(ResourceManager resourceManager) {
-		// 필요하다면 초기화 과정 추가
 		this.rMgr = resourceManager;
 		instTable = new InstTable("C:\\Users\\samsung\\Desktop\\inst.data");
 	}
@@ -47,22 +49,19 @@ public class SicSimulator {
 	 * 단, object code의 메모리 적재 및 해석은 SicLoader에서 수행하도록 한다. 
 	 */
 	public void load(File program) {
-		/* 메모리 초기화, 레지스터 초기화 등*/
 	}
 
 	/**
 	 * 1개의 instruction이 수행된 모습을 보인다. 
 	 */
 	public void oneStep() {
-		int ta=0;
+		 ta=0;
 		int disp = 0;
 		char[] tempChar1 =new char[1];
 		char[] tempChar2 = new char[2];
-		//char[] tempChar3 = new char[3];
-		 if(instTable.instMap.containsKey(String.format("%02X",rMgr.memory[rMgr.register[regPC]]&252))){
-			System.out.println(Integer.toHexString(rMgr.register[regPC])+" "+instTable.instMap.get(String.format("%02X",rMgr.memory[rMgr.register[regPC]]&252)).instruction);
-			//System.out.println(Integer.toHexString((int)(rMgr.memory[rMgr.register[regPC]]&252)));
-			//System.out.println(String.format("%02X",rMgr.memory[rMgr.register[regPC]]&252));
+		if(instTable.instMap.containsKey(String.format("%02X",rMgr.memory[rMgr.register[regPC]]&252))){
+			 addLog(instTable.instMap.get((String.format("%02X",rMgr.memory[rMgr.register[regPC]]&252))).instruction);
+			 rMgr.device="";
 			//Target Address 구하기
 			switch(rMgr.memory[rMgr.register[regPC]+1] & (bFlag |pFlag)){
 				case bFlag : // Base
@@ -79,7 +78,6 @@ public class SicSimulator {
 					else{
 						ta = (rMgr.register[regPC] + 3) + disp;
 					}
-					//System.out.println(disp + " " + ta);
 					break;
 				case 0 :
 					if((rMgr.memory[rMgr.register[regPC]+1] & eFlag )== 0){// 3형식 일때
@@ -95,6 +93,17 @@ public class SicSimulator {
 					}
 					break;
 			}
+			//instruction list에 메모리 상황 보여주기 위해 형식에 따라 나누어 해당 바이트만큼을 리스트에 띄워준다.
+			if(instTable.instMap.get((String.format("%02X",rMgr.memory[rMgr.register[regPC]]&252))).format.equals("2")){
+				 VisualSimulator.frame.im.addElement(Integer.toHexString(rMgr.charToInt(rMgr.getMemory(rMgr.register[regPC], 2))));
+				 ta = 0;
+			 }
+			 else if(instTable.instMap.get((String.format("%02X",rMgr.memory[rMgr.register[regPC]]&252))).format.equals("3/4")){
+				 if((rMgr.memory[rMgr.register[regPC]+1] & eFlag) == eFlag) // 4형식
+					 VisualSimulator.frame.im.addElement(Integer.toHexString(rMgr.charToInt(rMgr.getMemory(rMgr.register[regPC], 4))));
+				 else
+					 VisualSimulator.frame.im.addElement(Integer.toHexString(rMgr.charToInt(rMgr.getMemory(rMgr.register[regPC], 3))));
+			 }
 			//STL
 			if(Integer.toHexString((int)(rMgr.memory[rMgr.register[regPC]]&252)).equals("14")){
 				switch(rMgr.memory[rMgr.register[regPC]] & (nFlag |iFlag)){
@@ -104,7 +113,6 @@ public class SicSimulator {
 						break;
 					case nFlag|iFlag : // simple addressing
 						rMgr.setMemory(ta, rMgr.intToChar(rMgr.register[regL]),3);
-						System.out.println(rMgr.register[regL]);
 						if((rMgr.memory[rMgr.register[regPC]+1] & eFlag) == 0){
 							rMgr.register[regPC] +=3;
 						}
@@ -116,22 +124,17 @@ public class SicSimulator {
 			}
 			//JSUB
 			else if(Integer.toHexString((int)(rMgr.memory[rMgr.register[regPC]]&252)).equals("48")){
-				//System.out.println(nFlag|iFlag);
 				switch(rMgr.memory[rMgr.register[regPC]] & (nFlag |iFlag)){
 				case nFlag ://indirect addressing
 					break;
 				case iFlag ://immediate addressing
 					break;
 				case nFlag|iFlag : // simple addressing
-					//System.out.println(rMgr.memory[rMgr.register[regPC]+1] & eFlag);
-					//rMgr.setMemory(ta, rMgr.intToChar(rMgr.register[regL]),3);
 					if((rMgr.memory[rMgr.register[regPC]+1] & eFlag) == 0){
 						rMgr.setRegister(regL, rMgr.register[regPC]+3);
-						//System.out.println(rMgr.register[regL]);
 					}
 					else if((rMgr.memory[rMgr.register[regPC]+1] & eFlag) == 16){
 						rMgr.setRegister(regL, rMgr.register[regPC]+4);
-						//System.out.println(rMgr.register[regL]);
 					}
 					break;
 				}
@@ -142,14 +145,10 @@ public class SicSimulator {
 				if((rMgr.memory[rMgr.register[regPC]] & (nFlag|iFlag)) == 1){
 					rMgr.setRegister(regA, ta);					
 				}
-				else if((rMgr.memory[rMgr.register[regPC]] & (nFlag|iFlag)) == 2){
-									
-								}
+				else if((rMgr.memory[rMgr.register[regPC]] & (nFlag|iFlag)) == 2);
 				else if((rMgr.memory[rMgr.register[regPC]] & (nFlag|iFlag)) == 3){
-					
 					rMgr.setRegister(regA, rMgr.charToInt(rMgr.getMemory(ta, 3)));
 				}
-//				rMgr.setRegister(regA, rMgr.charToInt(rMgr.getMemory(ta, 3)));
 				if((rMgr.memory[rMgr.register[regPC]+1] & eFlag) == 0){
 					rMgr.register[regPC] +=3;
 				}
@@ -160,13 +159,10 @@ public class SicSimulator {
 			//COMP
 			else if(Integer.toHexString((int)(rMgr.memory[rMgr.register[regPC]]&252)).equals("28")){
 				if((rMgr.memory[rMgr.register[regPC]] & iFlag) == 1){
-				
 					if(rMgr.register[regA] == ta)
 						rMgr.register[regSW] = -1;
 					else
 						rMgr.register[regSW] = 0;
-					System.out.println(rMgr.register[regA]);
-					System.out.println(ta);
 				}
 				else{
 					if(rMgr.register[regA] == rMgr.charToInt(rMgr.getMemory(rMgr.register[regPC], 3)))
@@ -202,11 +198,7 @@ public class SicSimulator {
 									;
 				}
 				else if((rMgr.memory[rMgr.register[regPC]] & (nFlag|iFlag)) == 2){ //n = 1
-					//rMgr.setRegister(regPC,rMgr.memory[rMgr.charToInt(rMgr.getMemory(ta, 3))]);
-					System.out.println(ta);
-					System.out.println(rMgr.charToInt(rMgr.getMemory(rMgr.memory[ta], 3)));
-					System.out.println(rMgr.register[regPC]);
-					rMgr.setRegister(regPC, rMgr.charToInt(rMgr.getMemory(rMgr.memory[ta], 3)));
+					rMgr.setRegister(regPC, rMgr.charToInt(rMgr.getMemory(ta, 3)));
 				}
 			}
 			//STA
@@ -246,6 +238,7 @@ public class SicSimulator {
 			}
 			//TD
 			else if(Integer.toHexString((int)(rMgr.memory[rMgr.register[regPC]]&252)).equals("e0")){
+				
 				tempChar1[0] = rMgr.memory[ta];
 				rMgr.register[regSW] = 0;
 				rMgr.testDevice(Integer.toHexString(rMgr.charToInt(tempChar1)));
@@ -261,7 +254,6 @@ public class SicSimulator {
 				
 				tempChar1[0]= rMgr.readDevice(Integer.toHexString(rMgr.charToInt(rMgr.getMemory(ta, 1))));
 				rMgr.setRegister(regA, rMgr.charToInt(tempChar1));
-				//System.out.println(tempChar1[0]);
 				if((rMgr.memory[rMgr.register[regPC]+1] & eFlag) == 0){
 					rMgr.register[regPC] +=3;
 				}
@@ -274,7 +266,6 @@ public class SicSimulator {
 				
 				if(rMgr.register[regA] == rMgr.register[regS]){
 					rMgr.register[regSW]= -1;
-					//System.out.println("stop");
 				}
 				else
 					rMgr.register[regSW] = 0;
@@ -301,7 +292,6 @@ public class SicSimulator {
 				rMgr.register[regX]+=1;
 				tempChar1[0] = rMgr.memory[rMgr.register[regPC]+1];
 				tempChar1[0] = (char)(tempChar1[0]>>>4);
-				//System.out.println(rMgr.charToInt(tempChar1));
 				if(rMgr.register[regX] < rMgr.register[rMgr.charToInt(tempChar1)])
 					rMgr.register[regSW] = 1;
 				else if(rMgr.register[regX] == rMgr.register[rMgr.charToInt(tempChar1)])
@@ -373,24 +363,29 @@ public class SicSimulator {
 					rMgr.register[regPC] +=4;
 				}
 			}
+			if(rMgr.register[regPC] == 0){
+				VisualSimulator.frame.btnRunStep.setEnabled(false);
+			}
 		}
-		for(int i = 0 ; i < 4219 ; i++){
-		System.out.println(Integer.toHexString(i)+ " " + Integer.toHexString((int)rMgr.memory[i]));
-		}
-//		for(int i = 0 ; i < 10 ; i++){
-//			System.out.println("reg"+i+" " +rMgr.register[i]);
-//		}
 	}
 	
 	/**
 	 * 남은 모든 instruction이 수행된 모습을 보인다.
 	 */
 	public void allStep() {
+		while(true){
+			oneStep();
+			if(VisualSimulator.frame.btnRunStep.isEnabled() == false){
+				VisualSimulator.frame.btnRunAll.setEnabled(false);
+				break;
+			}
+		}
 	}
 	
 	/**
 	 * 각 단계를 수행할 때 마다 관련된 기록을 남기도록 한다.
 	 */
 	public void addLog(String log) {
+		VisualSimulator.frame.lm.addElement(log);
 	}	
 }

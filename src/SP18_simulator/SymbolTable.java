@@ -9,12 +9,10 @@ public class SymbolTable {
 	ArrayList<String> symbolList; // symbol을 저장하는 list
 	ArrayList<Integer> addressList; // symbol의 주소를 저장하는 list
 	
-	// 기타 literal, external 선언 및 처리방법을 구현한다.
 	public SymbolTable(){
 		symbolList = new ArrayList<String>(); 
 		addressList = new ArrayList<Integer>();
 	}
-	
 
 	/**
 	 * 새로운 Symbol을 table에 추가한다.
@@ -35,7 +33,6 @@ public class SymbolTable {
 	 * @param newaddress : 새로 바꾸고자 하는 주소값
 	 */
 	public void modifySymbol(String symbol, int newaddress) {
-		
 	}
 	
 	/**
@@ -48,7 +45,4 @@ public class SymbolTable {
 		//...
 		return address;
 	}
-	
-	
-	
 }

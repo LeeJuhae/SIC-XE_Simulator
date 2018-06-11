@@ -19,7 +19,6 @@ public class SicLoader {
 	SymbolTable symTab;
 	
 	public SicLoader(ResourceManager resourceManager) {
-		// 필요하다면 초기화
 		setResourceManager(resourceManager);
 		symTab = new SymbolTable();
 	}
@@ -46,7 +45,7 @@ public class SicLoader {
 			int csNum = -1; //Control Section 번호 
 			int x=1; // Header Record에서 program Name을 파싱할때 사용하는 변수
 			int num; // Modification에서 수정하고자 하는 메모리의 번지수를 저장하는 변수
-			int modiCount = 0;
+			int modiCount = 0; // 고쳐야 하는 half byte 개수
 			char[] tempChar;
 			int y=0;
 			ArrayList<String> mRecord = new ArrayList<String>(); // Modification Record 문장을 저장하는 list
@@ -58,7 +57,7 @@ public class SicLoader {
 			while((line = bufReader.readLine())!= null){
 				if(line.length() != 0){
 					switch(line.charAt(0)){
-						case 'H' : 
+						case 'H' : //Header record
 							for( ; x <7 ; x++){
 								if(line.charAt(x) == ' '){
 									break;
@@ -69,13 +68,13 @@ public class SicLoader {
 							rMgr.setProgLength(line.substring(13));
 							csNum++; 
 							break;
-						case 'D' :
+						case 'D' : // Define record
 							line = line.substring(1);
 							for(int i = 0 ; i < line.split(" ").length ; i++){
 								symTab.putSymbol(line.split(" ")[i++], Integer.parseInt(line.split(" ")[i],16));
 							}
 							break;
-						case 'T' :
+						case 'T' : // Text record
 							memoryNum = Integer.parseInt(line.substring(1,7), 16)+rMgr.startAddr.get(rMgr.startAddr.size()-1);
 							for(int i = 0 ; i < line.substring(9).length(); i++){
 								temp = Integer.parseInt(line.substring(9+i,10+i),16);
@@ -87,11 +86,11 @@ public class SicLoader {
 								}
 							}
 							break;
-						case 'M' :
+						case 'M' : //Modification record
 							mRecord.add(line);
 							mCsNum.add(csNum);
 							break;
-						case 'E' :
+						case 'E' : //End record
 							csAddr += Integer.parseInt(rMgr.progLength.get(rMgr.progLength.size()-1),16);
 							break;
 					}
@@ -141,9 +140,6 @@ public class SicLoader {
 				rMgr.setMemory(num, tempChar, modiCount);
 				y = 0;
 			}
-//			for(int i = 0 ; i < 4219 ; i++){
-//				System.out.println(Integer.toHexString(i)+ " " + Integer.toHexString((int)rMgr.memory[i]));
-//			}
 			bufReader.close();
 		}catch(IOException e){
 			System.out.println(e);

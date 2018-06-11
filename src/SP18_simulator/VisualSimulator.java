@@ -11,10 +11,10 @@ import java.awt.event.*;
  * 실제적인 작업은 SicSimulator에서 수행하도록 구현한다.
  */
 public class VisualSimulator {
-	ResourceManager resourceManager = new ResourceManager();
-	SicLoader sicLoader = new SicLoader(resourceManager);
+	ResourceManager resourceManager = new ResourceManager(); // 리소스매니저 생성
+	SicLoader sicLoader = new SicLoader(resourceManager); 
 	SicSimulator sicSimulator = new SicSimulator(resourceManager);
-	MyFrame frame;
+	static MyFrame frame;
 	public VisualSimulator(){
 		frame = new MyFrame();
 		frame.setResizable(false);
@@ -78,17 +78,20 @@ public class VisualSimulator {
 		frame.regX_hex.setText(Integer.toHexString(resourceManager.register[1]));
 		frame.regL_hex.setText(Integer.toHexString(resourceManager.register[2]));
 		frame.regPC_hex.setText(Integer.toHexString(resourceManager.register[8]));
-		//frame.regSW.setText(Integer.toHexString(resourceManager.register[0]));
 		frame.regB_hex.setText(Integer.toHexString(resourceManager.register[3]));
 		frame.regS_hex.setText(Integer.toHexString(resourceManager.register[4]));
 		frame.regT_hex.setText(Integer.toHexString(resourceManager.register[5]));
-		//frame.regF.setText(Integer.toHexString(resourceManager.register[0]));
+		
+		frame.progNameText.setText(resourceManager.progName.get(0));
+		frame.startAddrMem.setText("0000000");
+		frame.TA.setText(Integer.toHexString(sicSimulator.ta));
+		frame.startAddrOP.setText(String.format("%06X", resourceManager.startAddr.get(0)));
+		frame.firstInstAddr.setText("000000");
+		frame.progLength.setText(Integer.toHexString(Integer.parseInt(resourceManager.progLength.get(resourceManager.progLength.size()-1),16)+resourceManager.startAddr.get(resourceManager.startAddr.size()-1)));
+		frame.usingDevice.setText(resourceManager.device);
 	};
-	
-	
 	public static void main(String[] args) {
 		VisualSimulator visualSimulator = new VisualSimulator();
-		
 		/**open버튼 눌렸을 때 파일 다이얼로그 창 나타나게 함.**/
 		visualSimulator.frame.btnOpen.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent arg0){
@@ -96,7 +99,6 @@ public class VisualSimulator {
 				int ret = chooser.showOpenDialog(null);
 				if(ret == JFileChooser.APPROVE_OPTION){
 					try{
-						//initialize();
 						visualSimulator.load(chooser.getSelectedFile());
 						visualSimulator.frame.fileNameText.setText(chooser.getSelectedFile().getName());
 						visualSimulator.update();
@@ -104,7 +106,6 @@ public class VisualSimulator {
 						e.printStackTrace();
 					}
 				}
-				
 			}
 		});
 		/**Run(1 step)버튼 눌렸을 때**/
@@ -127,6 +128,5 @@ public class VisualSimulator {
 				System.exit(0);
 			}
 		});
-		
 	}
 }

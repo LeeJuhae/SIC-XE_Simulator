@@ -5,11 +5,11 @@ import javax.swing.border.*;
 public class MyFrame extends JFrame {
 
 	JPanel contentPane;
-	JButton btnOpen;
+	JButton btnOpen; // 여기서부터는 버튼
 	JButton btnRunStep;
 	JButton btnRunAll;
 	JButton btnExit;
-	JTextField fileNameText;
+	JTextField fileNameText;//여기서부터는 텍스트 필드
 	JTextField progNameText;
 	JTextField startAddrOP;
 	JTextField progLength;
@@ -33,7 +33,12 @@ public class MyFrame extends JFrame {
 	JTextField startAddrMem;
 	JTextField TA;
 	JTextField usingDevice;
-
+	JScrollPane inst_Scroll;
+	JScrollPane log_Scroll;
+	JList<String> list; // log 보여주는 리스트
+	JList<String> list_1; // instruction 보여주는 리스트
+	static DefaultListModel<String> lm = new DefaultListModel<>();
+	static DefaultListModel<String> im = new DefaultListModel<>();
 	/**
 	 * Create the frame.
 	 */
@@ -263,10 +268,14 @@ public class MyFrame extends JFrame {
 		lblLogaboutPerforming.setBounds(14, 654, 239, 18);
 		contentPane.add(lblLogaboutPerforming);
 		
-		JList list = new JList();
+		list = new JList<String>();
+		list.setModel(lm);
 		list.setBounds(14, 684, 697, 163);
-		contentPane.add(list);
 		
+		log_Scroll = new JScrollPane(list);
+		log_Scroll.setBounds(14, 684, 697, 163);
+	    contentPane.add(log_Scroll);
+	    
 		JPanel panel_3 = new JPanel();
 		panel_3.setBorder(new TitledBorder(null, "E (End Record)", TitledBorder.LEADING, TitledBorder.TOP, null, null));
 		panel_3.setBounds(369, 53, 325, 78);
@@ -311,10 +320,14 @@ public class MyFrame extends JFrame {
 		lblInstructions.setBounds(372, 217, 104, 18);
 		contentPane.add(lblInstructions);
 		
-		JList list_1 = new JList();
+		list_1 = new JList<String>();
+		list_1.setModel(im);
 		list_1.setBounds(377, 252, 181, 397);
-		contentPane.add(list_1);
 		
+		inst_Scroll = new JScrollPane(list_1);
+		inst_Scroll.setBounds(377, 252, 181, 397);
+		contentPane.add(inst_Scroll);
+	    
 		JLabel lblUsingDevice = new JLabel("Using Device");
 		lblUsingDevice.setBounds(603, 293, 96, 18);
 		contentPane.add(lblUsingDevice);

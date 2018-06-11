@@ -1,7 +1,5 @@
 package SP18_simulator;
 
-//import java.awt.List;
-//import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
@@ -10,7 +8,6 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.nio.file.StandardOpenOption;
-
 
 
 /**
@@ -37,22 +34,22 @@ public class ResourceManager{
 	 * 이것도 복잡하면 알아서 구현해서 사용해도 괜찮습니다.
 	 */
 	HashMap<String,Object> deviceManager = new HashMap<String,Object>();
-	char[] memory = new char[65536]; // String으로 수정해서 사용하여도 무방함.
-	int[] register = new int[10];
+	char[] memory = new char[65536]; //가상 메모리
+	int[] register = new int[10]; // 레지스터 값을 저장하는 배열
 	double register_F;
-	int noOfBytesRead =0;
-	SymbolTable symtabList;
-	// 이외에도 필요한 변수 선언해서 사용할 것.
-	ArrayList<String> progName = new ArrayList<String>();
-	ArrayList<String> progLength = new ArrayList<String>();
-	ArrayList<Integer> startAddr = new ArrayList<Integer>();
-	FileChannel fileChannel;
+	int noOfBytesRead =0; // 입출력 스트림이 읽은 글자 수
+	SymbolTable symtabList; 
+
+	ArrayList<String> progName = new ArrayList<String>(); // 프로그램의 이름을 저장하는 arrayList
+	ArrayList<String> progLength = new ArrayList<String>(); // 프로그램의 길이를 저장하는 arrayList
+	ArrayList<Integer> startAddr = new ArrayList<Integer>(); // 프로그램의 실제 시작주소를 저장하는 arrayList
+	FileChannel fileChannel;//파일 입출력시 사용하는 스트림
+	String device; //디바이스장치의 이름 저장
 	/**
 	 * 메모리, 레지스터등 가상 리소스들을 초기화한다.
 	 */
 	public void initializeResource(){
 		register[9] = -1;//regSW = -1로 초기화
-		//register[2] = 3;
 	}
 	
 	/**
@@ -60,7 +57,6 @@ public class ResourceManager{
 	 * 프로그램을 종료하거나 연결을 끊을 때 호출한다.
 	 */
 	public void closeDevice() {
-		
 	}
 	
 	/**
@@ -71,6 +67,7 @@ public class ResourceManager{
 	 */
 	public void testDevice(String devName){
 		if(!deviceManager.containsKey(devName)){
+			device = devName;
 			try {
 				fileChannel = FileChannel.open(
 					    Paths.get("C:\\Users\\samsung\\Desktop\\"+devName+".txt"),
@@ -95,13 +92,11 @@ public class ResourceManager{
 	 * @return 가져온 데이터
 	 */
 	public char readDevice(String devName){
-		//System.out.println(noOfBytesRead);
 		FileChannel fc = (FileChannel)deviceManager.get(devName);
 		ByteBuffer buffer = ByteBuffer.allocate(1);
-		
+		device = devName;
 		try {
 			noOfBytesRead  = fc.read(buffer);
-			//System.out.println(buffer);
 			buffer.flip();
 			if(noOfBytesRead == -1)
 				return 0;
@@ -120,6 +115,7 @@ public class ResourceManager{
 	 */
 	public void writeDevice(String devName, char data){
 		FileChannel fc = (FileChannel)deviceManager.get(devName);
+		device = devName;
 		try{
 			ByteBuffer bf = Charset.defaultCharset().encode(Character.toString(data));
 			fc.write(bf);
@@ -127,7 +123,6 @@ public class ResourceManager{
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
 	}
 	
 	/**
