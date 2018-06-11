@@ -118,7 +118,15 @@ public class ResourceManager{
 	 * @param data 보내는 데이터
 	 * @param num 보내는 글자의 개수
 	 */
-	public void writeDevice(String devName, char[] data, int num){
+	public void writeDevice(String devName, char data){
+		FileChannel fc = (FileChannel)deviceManager.get(devName);
+		try{
+			ByteBuffer bf = Charset.defaultCharset().encode(Character.toString(data));
+			fc.write(bf);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		
 	}
 	
@@ -176,14 +184,6 @@ public class ResourceManager{
 	 * @param data
 	 * @return
 	 */
-//	public char[] intToChar(int data){
-//		char[] tempChar = new char[3];
-//		for(int k = 1 ; k >=0 ; k--){
-//			tempChar[k] = (char) (data & 255);
-//			data = data>>8;
-//		}
-//		return tempChar;
-//	}
 	public char[] intToChar(int data){
 		char[] tempChar = new char[3];
 		for(int k = 2 ; k >=0 ; k--){
@@ -198,19 +198,6 @@ public class ResourceManager{
 	 * @param data
 	 * @return
 	 */
-//	public int charToInt(char[] data){
-//		int num=0;
-//		for(int i = 0 ; i < data.length ; i++){
-//			if(i == 0)
-//				num+= data[i]&15;
-//			else
-//				num+=(int)data[i];
-//			if(i == data.length-1)
-//				break;
-//			num = num<<8;
-//		}
-//		return num;
-//	}
 	public int charToInt(char[] data){
 		int num=0;
 		for(int i = 0 ; i < data.length ; i++){
